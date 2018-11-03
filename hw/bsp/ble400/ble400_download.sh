@@ -29,14 +29,32 @@
 #  - FLASH_OFFSET contains the flash offset to download to
 #  - BOOT_LOADER is set if downloading a bootloader
 
-. $CORE_PATH/hw/scripts/openocd.sh
+USE_OPENOCD=1
 
-CFG="-s $BSP_PATH -f ble400.cfg"
+# Look for 'JLINK_DEBUG' in FEATURES
+for feature in $FEATURES; do
+    if [ $feature = "JLINK_DEBUG" ]; then
+        USE_OPENOCD=0
+    fi
+done
 
 if [ "$MFG_IMAGE" ]; then
     FLASH_OFFSET=0x0
 fi
 
-common_file_to_load
-openocd_load
-openocd_reset_run
+if [ $USE_OPENOCD -eq 1 ]; then
+    . $CORE_PATH/hw/scripts/openocd.sh
+
+    CFG="-s $BSP_PATH -f ble400.cfg"
+
+    common_file_to_load
+    openocd_load
+    openocd_reset_run
+else
+    . $CORE_PATH/hw/scripts/jlink.sh
+
+    JLINK_DEV="nRF51822_xxAC"
+
+    common_file_to_load
+    jlink_load
+fi
