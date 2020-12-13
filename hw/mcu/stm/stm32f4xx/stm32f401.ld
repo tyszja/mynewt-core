@@ -52,6 +52,8 @@
  */
 ENTRY(Reset_Handler)
 
+_estack = ORIGIN(RAM) + LENGTH(RAM);
+
 SECTIONS
 {
     /* Reserve space at the start of the image for the header. */
@@ -64,6 +66,7 @@ SECTIONS
 
     .text :
     {
+        __isr_vector = .;
         __isr_vector_start = .;
         KEEP(*(.isr_vector))
         __isr_vector_end = .;
@@ -124,8 +127,11 @@ SECTIONS
 
     __ecoredata = __etext + SIZEOF(.coredata);
 
+    _sidata = LOADADDR(.data);
+
     .data :
     {
+        _sdata = .;
         __data_start__ = .;
         *(vtable)
         *(.data*)
@@ -154,6 +160,7 @@ SECTIONS
         . = ALIGN(4);
         /* All data end */
         __data_end__ = .;
+        _edata = .;
 
     } > RAM AT > FLASH
 
@@ -173,10 +180,12 @@ SECTIONS
     .bss :
     {
         . = ALIGN(4);
+        _sbss = .;
         __bss_start__ = .;
         *(.bss*)
         *(COMMON)
         . = ALIGN(4);
+        _ebss = .;
         __bss_end__ = .;
     } > RAM
 

@@ -95,7 +95,8 @@ LoopCopyDataInit:
   bcc  CopyDataInit
   ldr  r2, =_sbss
   b  LoopFillZerobss
-/* Zero fill the bss segment. */  
+
+/* Zero fill the bss segment. */
 FillZerobss:
   movs  r3, #0
   str  r3, [r2], #4
@@ -105,10 +106,22 @@ LoopFillZerobss:
   cmp  r2, r3
   bcc  FillZerobss
 
+/* Mynewt specific corebss clearing. */
+  ldr   r2, =__corebss_start__
+  b     LoopFillZeroCoreBss
+
+/* Zero fill the bss segment. */
+FillZeroCoreBss:
+  movs  r3, #0
+  str   r3, [r2], #4
+
+LoopFillZeroCoreBss:
+  ldr   r3, =__corebss_end__
+  cmp   r2, r3
+  bcc   FillZeroCoreBss
+
 /* Call the clock system intitialization function.*/
   bl  SystemInit   
-/* Call static constructors */
-    bl __libc_init_array
 /* Call the application's entry point.*/
   bl  main
   bx  lr    
@@ -138,6 +151,8 @@ Infinite_Loop:
   .size  g_pfnVectors, .-g_pfnVectors
     
 g_pfnVectors:
+  .globl __isr_vector
+__isr_vector:
   .word  _estack
   .word  Reset_Handler
   .word  NMI_Handler
